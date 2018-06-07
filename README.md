@@ -17,18 +17,19 @@ Play-by-play data for these events is then exported to atbat_table.csv, and pitc
 
 **table_creation.sql** is a schema for setting up a database with the information in both atbat_table.csv and pitch_table.csv.
 
-##What's new with this fork?
+## What's new with this fork?
+
 I've performed a couple updates to this fork, including:
 
 * Fixed the scraper to work with MLB's revised Gameday format
 * Scrapes pitch data for Minor Leagues
 
-##What still is left to be done?
+## What still is left to be done?
 I am planning on implementing the following functionalities:
 
 * Scrapes batted ball data for Minor Leagues
 
 I am open to suggestions, so if there is additional functionality that people wish to have regarding this scraper, please let me know. You can find me on twitter @John_Edwards_
 
-##What is required?
+## What is required?
 This code is written in Python 3, and requires installation of the BeautifulSoup4 and LXML packages. For more information on installing these packages, see [Choiniere's article.](https://www.beyondtheboxscore.com/2015/9/24/9374949/a-new-python-based-pitchf-x-parser-scraper)
