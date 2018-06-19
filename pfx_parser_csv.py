@@ -29,6 +29,8 @@ atbat_outfile=open("atbat_table.csv", "a+", encoding='utf-8')
 
 league = input("Would you like to scrape the MLB or another level of baseball? Type MLB or other: ")
 minor_league = ""
+if league.lower() != 'mlb' and league.lower() != 'other':
+    raise ValueError('You need to put in either \'MLB\' or \'other\'.')
 if league == 'other':
         print("The following are the codes for scraping individual minor leagues and competition levels. Note that data for these levels are relatively incomplete compared to MLB levels. Please enter the appropriate code to scrape each league.")
         print("AAA = \'aaa\'")
@@ -86,7 +88,7 @@ add_pitch = ("INSERT INTO pythonpfx.pitches "
 if os.stat("pitch_table.csv").st_size==0:
 	pitch_outfile.write("retro_game_id,year,st_fl,regseason_fl,playoffs_fl,game_type,game_type_des,game_id,home_team_id,home_team_lg,away_team_id,away_team_lg,interleague_fl,inning,bat_home_id,park_id,park_name,park_lock,pit_id,bat_id,pit_hand_cd,bat_hand_cd,pa_ball_ct,pa_strike_ct,outs_ct,pitch_seq,pa_terminal_fl,pa_event_cd,start_bases_cd,end_bases_cd,event_outs_ct,ab_number,pitch_res,pitch_des,pitch_id,x,y,start_speed,end_speed,sz_top,sz_bot,pfx_x,pfx_z,px,pz,x0,y0,z0,vx0,vy0,vz0,ax,ay,az,break_y,break_angle,break_length,pitch_type,pitch_type_seq,type_conf,zone,spin_dir,spin_rate,sv_id\n")
 if os.stat("atbat_table.csv").st_size==0:
-	atbat_outfile.write("retro_game_id,year,month,day,st_fl,regseason_fl,playoff_fl,game_type,game_type_des,local_game_time,game_id,home_team_id,away_team_id,home_team_lg,away_team_lg,interleague_fl,park_id,park_name,park_location,inning_number,bat_home_id,inn_outs,ab_number,pit_mlbid,pit_hand_cd,bat_mlbid,bat_hand_cd,ball_ct,strike_ct,pitch_seq,pitch_type_seq,event_outs_ct,ab_des,event_tx,event_cd,battedball_cd,start_bases_cd,end_bases_cd\n")
+	atbat_outfile.write("retro_game_id,year,month,day,st_fl,regseason_fl,playoff_fl,game_type,game_type_des,local_game_time,game_id,home_team_id,away_team_id,home_team_lg,away_team_lg,interleague_fl,park_id,park_name,park_location,inning_number,bat_home_id,inn_outs,ab_number,pit_mlbid,pit_hand_cd,bat_mlbid,bat_hand_cd,ball_ct,strike_ct,pitch_seq,pitch_type_seq,event_outs_ct,ab_des,event_tx,event_cd,battedball_cd,start_bases_cd,end_bases_cd,hit_x,hit_y\n")
 
 if league == 'MLB':
         base_url = "http://gd2.mlb.com/components/game/mlb/"
@@ -198,6 +200,8 @@ for i in range(delta.days+1):
 				tested_inn_url = inn_url
 			except:
 				continue
+			hit_soup = BeautifulSoup(urlopen(tested_inn_url + 'inning_hit.xml'), "xml")
+			game_hits = 0
 			for inning in BeautifulSoup(urlopen(tested_inn_url),"lxml").find_all("a", href=re.compile("inning_\d*.xml")):
 				inn_soup = BeautifulSoup(urlopen(inn_url+inning.get_text().strip()), "xml")
 				inning_number = inn_soup.inning["num"]
@@ -281,7 +285,7 @@ for i in range(delta.days+1):
 							elif ab_des.lower().count("pops")>0:
 								battedball_cd="P"
 							else:
-								battedball_cd=""
+								battedball_cd="U"
 						elif event_tx=="Double Play" or event_tx=="Triple Play" or event_tx=="Sacrifice Bunt D":
 							event_cd=2
 							if ab_des.lower().count("ground")>0:
@@ -293,7 +297,7 @@ for i in range(delta.days+1):
 							elif ab_des.lower().count("pops")>0:
 								battedball_cd="P"
 							else:
-								battedball_cd=""
+								battedball_cd="U"
 						elif event_tx=="Strikeout" or event_tx=="Strikeout - DP":
 							event_cd=3
 						elif event_tx=="Walk":
@@ -306,8 +310,10 @@ for i in range(delta.days+1):
 							event_cd=17
 						elif event_tx[-5:]=="Error":
 							event_cd=18
+							battedball_cd = 'U'
 						elif event_tx=="Fielders Choice Out" or event_tx=="Fielders Choice":
 							event_cd=19
+							battedball_cd = 'U'
 						elif event_tx=="Single":
 							event_cd=20
 							if ab_des.count("on a line drive")>0:
@@ -319,7 +325,7 @@ for i in range(delta.days+1):
 							elif ab_des.count("pop up")>0:
 								battedball_cd="P"
 							else:
-								battedball_cd=""
+								battedball_cd="U"
 						elif event_tx=="Double":
 							event_cd=21
 							if ab_des.count("line drive")>0:
@@ -331,7 +337,7 @@ for i in range(delta.days+1):
 							elif ab_des.count("pop up")>0:
 								battedball_cd="P"
 							else:
-								battedball_cd=""
+								battedball_cd="U"
 						elif event_tx=="Triple":
 							event_cd=22
 							if ab_des.count("line drive")>0:
@@ -343,7 +349,7 @@ for i in range(delta.days+1):
 							elif ab_des.count("pop up")>0:
 								battedball_cd="P"
 							else:
-								battedball_cd=""
+								battedball_cd="U"
 						elif event_tx=="Home Run":
 							event_cd=23
 							if ab_des.count("on a line drive")>0:
@@ -355,7 +361,7 @@ for i in range(delta.days+1):
 							elif ab_des.count("pop up")>0:
 								battedball_cd="P"
 							else:
-								battedball_cd=""
+								battedball_cd="U"
 						elif event_tx=="Runner Out":
 							if ab_des.lower().count("caught stealing")>0:
 								event_cd=6
@@ -363,6 +369,17 @@ for i in range(delta.days+1):
 								event_cd=8
 						else:
 							event_cd=99
+						try:
+							if battedball_cd == "G" or battedball_cd == "F" or battedball_cd == "L" or battedball_cd == "G" or battedball_cd == "P" or battedball_cd == "U":
+								hit_x = hit_soup.find_all('hip')[game_hits]['x']
+								hit_y = hit_soup.find_all('hip')[game_hits]['y']
+								game_hits += 1
+							else:
+								hit_x = ""
+								hit_y = ""
+						except:
+							hit_x = ""
+							hit_y = ""
 						if ab.find("runner", start="1B"):
 							base1 = "1"
 						if ab.find("runner", start="2B"):
@@ -597,7 +614,7 @@ for i in range(delta.days+1):
 							elif pitch_res=="F":
 								if strike_tally<2:
 									strike_tally+=1
-						atbat_outfile.write(str(retro_game_id)+","+str(active_date.year)+","+str(active_date.month)+","+str(active_date.day)+","+str(st_fl)+","+str(regseason_fl)+","+str(playoff_fl)+","+str(game_type)+","+str(game_type_des)+","+str(local_game_time)+","+str(game_id)+","+str(home_team_id)+","+str(away_team_id)+","+str(home_team_lg)+","+str(away_team_lg)+","+str(interleague_fl)+","+str(park_id)+","+str(park_name)+",\""+str(park_loc)+"\","+str(inning_number)+","+str(bat_home_id)+","+str(top_outs)+","+str(ab_number)+","+str(pit_mlbid)+","+str(pit_hand_cd)+","+str(bat_mlbid)+","+str(bat_hand_cd)+","+str(ball_ct)+","+str(strike_ct)+","+str(pitch_seq)+","+str(pitch_type_seq)+","+str(event_outs_ct)+",\""+str(ab_des)+"\","+str(event_tx)+","+str(event_cd)+","+str(battedball_cd)+","+str(start_bases_cd)+","+str(end_bases_cd)+"\n")
+						atbat_outfile.write(str(retro_game_id)+","+str(active_date.year)+","+str(active_date.month)+","+str(active_date.day)+","+str(st_fl)+","+str(regseason_fl)+","+str(playoff_fl)+","+str(game_type)+","+str(game_type_des)+","+str(local_game_time)+","+str(game_id)+","+str(home_team_id)+","+str(away_team_id)+","+str(home_team_lg)+","+str(away_team_lg)+","+str(interleague_fl)+","+str(park_id)+","+str(park_name)+",\""+str(park_loc)+"\","+str(inning_number)+","+str(bat_home_id)+","+str(top_outs)+","+str(ab_number)+","+str(pit_mlbid)+","+str(pit_hand_cd)+","+str(bat_mlbid)+","+str(bat_hand_cd)+","+str(ball_ct)+","+str(strike_ct)+","+str(pitch_seq)+","+str(pitch_type_seq)+","+str(event_outs_ct)+",\""+str(ab_des)+"\","+str(event_tx)+","+str(event_cd)+","+str(battedball_cd)+","+str(start_bases_cd)+","+str(end_bases_cd)+","+str(hit_x)+","+str(hit_y)+"\n")
 						top_outs += int(event_outs_ct)
 				if inn_soup.inning.find("bottom"):
 					for ab in inn_soup.inning.bottom.find_all("atbat"):
@@ -676,7 +693,7 @@ for i in range(delta.days+1):
 							elif ab_des.lower().count("pops")>0:
 								battedball_cd="P"
 							else:
-								battedball_cd=""
+								battedball_cd="U"
 						elif event_tx=="Double Play" or event_tx=="Triple Play" or event_tx=="Sacrifice Bunt D":
 							event_cd=2
 							if ab_des.lower().count("ground")>0:
@@ -688,7 +705,7 @@ for i in range(delta.days+1):
 							elif ab_des.lower().count("pops")>0:
 								battedball_cd="P"
 							else:
-								battedball_cd=""
+								battedball_cd="U"
 						elif event_tx=="Strikeout" or event_tx=="Strikeout - DP":
 							event_cd=3
 						elif event_tx=="Walk":
@@ -701,8 +718,10 @@ for i in range(delta.days+1):
 							event_cd=17
 						elif event_tx[-5:]=="Error":
 							event_cd=18
+							battedball_cd = 'U'
 						elif event_tx=="Fielders Choice Out" or event_tx=="Fielders Choice":
 							event_cd=19
+							battedball_cd = 'U'
 						elif event_tx=="Single":
 							event_cd=20
 							if ab_des.count("on a line drive")>0:
@@ -714,7 +733,7 @@ for i in range(delta.days+1):
 							elif ab_des.count("pop up")>0:
 								battedball_cd="P"
 							else:
-								battedball_cd=""
+								battedball_cd="U"
 						elif event_tx=="Double":
 							event_cd=21
 							if ab_des.count("line drive")>0:
@@ -726,7 +745,7 @@ for i in range(delta.days+1):
 							elif ab_des.count("pop up")>0:
 								battedball_cd="P"
 							else:
-								battedball_cd=""
+								battedball_cd="U"
 						elif event_tx=="Triple":
 							event_cd=22
 							if ab_des.count("line drive")>0:
@@ -738,7 +757,7 @@ for i in range(delta.days+1):
 							elif ab_des.count("pop up")>0:
 								battedball_cd="P"
 							else:
-								battedball_cd=""
+								battedball_cd="U"
 						elif event_tx=="Home Run":
 							event_cd=23
 							if ab_des.count("on a line drive")>0:
@@ -750,7 +769,7 @@ for i in range(delta.days+1):
 							elif ab_des.count("pop up")>0:
 								battedball_cd="P"
 							else:
-								battedball_cd=""
+								battedball_cd="U"
 						elif event_tx=="Runner Out":
 							if ab_des.lower().count("caught stealing")>0:
 								event_cd=6
@@ -758,6 +777,17 @@ for i in range(delta.days+1):
 								event_cd=8
 						else:
 							event_cd=99
+						try:
+							if battedball_cd == "G" or battedball_cd == "F" or battedball_cd == "L" or battedball_cd == "G" or battedball_cd == "P" or battedball_cd == "U":
+								hit_x = hit_soup.find_all('hip')[game_hits]['x']
+								hit_y = hit_soup.find_all('hip')[game_hits]['y']
+								game_hits += 1
+							else:
+								hit_x = ""
+								hit_y = ""
+						except:
+							hit_x = ""
+							hit_y = ""
 						if ab.find("runner", start="1B"):
 							base1 = "1"
 						if ab.find("runner", start="2B"):
@@ -992,6 +1022,6 @@ for i in range(delta.days+1):
 							elif pitch_res=="F":
 								if strike_tally<2:
 									strike_tally+=1
-						atbat_outfile.write(str(retro_game_id)+","+str(active_date.year)+","+str(active_date.month)+","+str(active_date.day)+","+str(st_fl)+","+str(regseason_fl)+","+str(playoff_fl)+","+str(game_type)+","+str(game_type_des)+","+str(local_game_time)+","+str(game_id)+","+str(home_team_id)+","+str(away_team_id)+","+str(home_team_lg)+","+str(away_team_lg)+","+str(interleague_fl)+","+str(park_id)+","+str(park_name)+",\""+str(park_loc)+"\","+str(inning_number)+","+str(bat_home_id)+","+str(bottom_outs)+","+str(ab_number)+","+str(pit_mlbid)+","+str(pit_hand_cd)+","+str(bat_mlbid)+","+str(bat_hand_cd)+","+str(ball_ct)+","+str(strike_ct)+","+str(pitch_seq)+","+str(pitch_type_seq)+","+str(event_outs_ct)+",\""+str(ab_des)+"\","+str(event_tx)+","+str(event_cd)+","+str(battedball_cd)+","+str(start_bases_cd)+","+str(end_bases_cd)+"\n")
+						atbat_outfile.write(str(retro_game_id)+","+str(active_date.year)+","+str(active_date.month)+","+str(active_date.day)+","+str(st_fl)+","+str(regseason_fl)+","+str(playoff_fl)+","+str(game_type)+","+str(game_type_des)+","+str(local_game_time)+","+str(game_id)+","+str(home_team_id)+","+str(away_team_id)+","+str(home_team_lg)+","+str(away_team_lg)+","+str(interleague_fl)+","+str(park_id)+","+str(park_name)+",\""+str(park_loc)+"\","+str(inning_number)+","+str(bat_home_id)+","+str(bottom_outs)+","+str(ab_number)+","+str(pit_mlbid)+","+str(pit_hand_cd)+","+str(bat_mlbid)+","+str(bat_hand_cd)+","+str(ball_ct)+","+str(strike_ct)+","+str(pitch_seq)+","+str(pitch_type_seq)+","+str(event_outs_ct)+",\""+str(ab_des)+"\","+str(event_tx)+","+str(event_cd)+","+str(battedball_cd)+","+str(start_bases_cd)+","+str(end_bases_cd)+","+str(hit_x)+","+str(hit_y)+"\n")
 						bottom_outs += int(event_outs_ct)
 	prior_d_url = d_url
