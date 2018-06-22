@@ -27,7 +27,7 @@ I've performed a couple updates to this fork, including:
 ## What still is left to be done?
 I am planning on implementing the following functionalities:
 
-* Scrapes batted ball data for Minor Leagues
+* ~~Scrapes batted ball data for Minor Leagues~~ Done as of 6/22/2018, added under AB Table
 
 I am open to suggestions, so if there is additional functionality that people wish to have regarding this scraper, please let me know. You can find me on twitter @John_Edwards_
 
