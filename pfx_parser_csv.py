@@ -95,7 +95,7 @@ if os.stat("atbat_table.csv").st_size==0:
 if league == 'MLB':
         base_url = "http://gd2.mlb.com/components/game/mlb/"
 else:
-        base_url = "http://gdx.mlb.com/components/game/" + minor_league + "/"
+        base_url = "http://gdx.mlb.com/components/game/" + minor_league.lower() + "/"
 
 delta = enddate - startdate
 prior_d_url = ""
